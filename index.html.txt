@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>MangaHub - Read & Upload Manga</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            padding-bottom: 80px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .header h1 span {
+            color: #e94560;
+        }
+
+        .nav {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .nav button {
+            background: transparent;
+            border: none;
+            color: #e0e0e0;
+            font-size: 16px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .nav button.active {
+            background: #e94560;
+            color: white;
+        }
+
+        .nav button:hover {
+            background: #2a2a4a;
+        }
+
+        /* Search bar */
+        .search-container {
+            padding: 16px 20px;
+            background: #0f0f1a;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #1e1e2e;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+        }
+
+        .search-container input:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+
+        /* Manga grid */
+        .manga-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 16px;
+            padding: 20px;
+        }
+
+        .manga-card {
+            background: #1a1a2a;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .manga-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(233,69,96,0.2);
+        }
+
+        .manga-cover {
+            width: 100%;
+            aspect-ratio: 2/3;
+            background: linear-gradient(135deg, #2a2a4a, #1a1a2e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+
+        .manga-info {
+            padding: 12px;
+        }
+
+        .manga-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .manga-author {
+            font-size: 11px;
+            color: #888;
+        }
+
+        /* Reading page */
+        .reading-container {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .chapter-nav button {
+            background: #e94560;
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .chapter-nav button:disabled {
+            background: #2a2a4a;
+            cursor: not-allowed;
+        }
+
+        .manga-image {
+            width: 100%;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            background: #1a1a2a;
+        }
+
+        .page-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .page-controls button {
+            background: #2a2a4a;
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* Admin panel */
+        .admin-panel {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .admin-section {
+            background: #1a1a2a;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .admin-section h3 {
+            margin-bottom: 16px;
+            color: #e94560;
+        }
+
+        .admin-section input, .admin-section textarea, .admin-section select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            background: #0f0f1a;
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .admin-section button {
+            background: #e94560;
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .admin-login {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: #1a1a2a;
+            padding: 20px;
+            border-radius: 16px;
+            margin: 20px;
+        }
+
+        .admin-login input {
+            flex: 1;
+            padding: 12px;
+            background: #0f0f1a;
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            color: white;
+        }
+
+        /* Chapter list */
+        .chapter-list {
+            padding: 20px;
+        }
+
+        .chapter-item {
+            background: #1a1a2a;
+            padding: 16px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:hover {
+            background: #2a2a4a;
+        }
+
+        /* Back button */
+        .back-btn {
+            background: transparent;
+            border: none;
+            color: #e94560;
+            font-size: 16px;
+            padding: 12px 20px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Utility */
+        .hidden {
+            display: none;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        /* Tap targets for mobile */
+        button, .manga-card, .chapter-item {
+            min-height: 44px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 500px) {
+            .manga-grid {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Manga<span>Hub</span></h1>
+    <div class="nav">
+        <button class="nav-btn active" data-section="browse">📚 Browse</button>
+        <button class="nav-btn" data-section="upload">✏️ Creator Hub</button>
+        <button class="nav-btn" data-section="admin">⚙️ Admin</button>
+    </div>
+</div>
+
+<div class="search-container" id="searchContainer">
+    <input type="text" id="searchInput" placeholder="Search manga by title...">
+</div>
+
+<!-- Browse Section -->
+<div id="browseSection" class="section active">
+    <div id="mangaGrid" class="manga-grid"></div>
+</div>
+
+<!-- Reading Section -->
+<div id="readingSection" class="section">
+    <button class="back-btn" id="backToBrowse">← Back to Library</button>
+    <div class="reading-container">
+        <h2 id="readingTitle" style="margin-bottom: 16px;"></h2>
+        <div class="chapter-nav">
+            <button id="prevChapterBtn">← Previous Chapter</button>
+            <button id="nextChapterBtn">Next Chapter →</button>
+        </div>
+        <div id="pagesContainer"></div>
+        <div class="page-controls">
+            <button id="prevPageBtn">◀ Previous Page</button>
+            <button id="nextPageBtn">Next Page ▶</button>
+        </div>
+    </div>
+</div>
+
+<!-- Creator Hub (Upload Original Manga) -->
+<div id="uploadSection" class="section">
+    <div class="admin-panel">
+        <div class="admin-section">
+            <h3>📖 Upload Your Original Manga</h3>
+            <input type="text" id="newMangaTitle" placeholder="Manga Title">
+            <input type="text" id="newMangaAuthor" placeholder="Author Name">
+            <textarea id="newMangaDesc" placeholder="Description" rows="3"></textarea>
+            <input type="text" id="newMangaGenre" placeholder="Genre (e.g., Action, Romance)">
+            <button id="createMangaBtn">Create New Manga</button>
+        </div>
+
+        <div class="admin-section">
+            <h3>📄 Add Chapter to Your Manga</h3>
+            <select id="chapterMangaSelect"></select>
+            <input type="number" id="chapterNumber" placeholder="Chapter Number">
+            <textarea id="chapterPages" placeholder="Image URLs (one per line)" rows="5"></textarea>
+            <small style="color:#888; display:block; margin-bottom:12px;">Enter one image URL per line (Imgur, PostImage, etc.)</small>
+            <button id="addChapterBtn">Add Chapter</button>
+        </div>
+
+        <div class="admin-section">
+            <h3>✨ Your Manga</h3>
+            <div id="creatorMangaList"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Section (Upload existing/popular manga) -->
+<div id="adminSection" class="section">
+    <div id="adminAuth" class="admin-login">
+        <input type="password" id="adminPassword" placeholder="Admin Password">
+        <button id="adminLoginBtn">Login</button>
+    </div>
+    <div id="adminContent" class="hidden">
+        <div class="admin-panel">
+            <div class="admin-section">
+                <h3>📚 Add Existing Manga (One Piece, JJK, etc.)</h3>
+                <input type="text" id="adminMangaTitle" placeholder="Manga Title">
+                <input type="text" id="adminMangaAuthor" placeholder="Author">
+                <textarea id="adminMangaDesc" placeholder="Description" rows="3"></textarea>
+                <input type="text" id="adminMangaGenre" placeholder="Genre">
+                <input type="text" id="adminMangaCover" placeholder="Cover Image URL">
+                <button id="adminAddMangaBtn">Add Manga</button>
+            </div>
+
+            <div class="admin-section">
+                <h3>📄 Add Chapter to Manga</h3>
+                <select id="adminMangaSelect"></select>
+                <input type="number" id="adminChapterNum" placeholder="Chapter Number">
+                <textarea id="adminChapterPages" placeholder="Page Image URLs (one per line)" rows="5"></textarea>
+                <button id="adminAddChapterBtn">Add Chapter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============ DATA STRUCTURE ============
+    let mangaLibrary = [];
+    let currentManga = null;
+    let currentChapter = null;
+    let currentPageIndex = 0;
+    let currentView = 'browse';
+    let isAdminLoggedIn = false;
+
+    // Admin password (change this to whatever you want)
+    const ADMIN_PASSWORD = "mangaadmin123";
+
+    // Load data from localStorage
+    function loadData() {
+        const saved = localStorage.getItem('mangaHubData');
+        if (saved) {
+            mangaLibrary = JSON.parse(saved);
+        } else {
+            // Seed some demo data
+            mangaLibrary = [
+                {
+                    id: "m1",
+                    title: "Shadow Warrior",
+                    author: "Tanaka Kenji",
+                    description: "A young ninja seeks revenge in a cyberpunk world.",
+                    genre: "Action",
+                    coverType: "🗡️",
+                    isOriginal: true,
+                    chapters: [
+                        { num: 1, pages: ["https://picsum.photos/id/1/800/1200", "https://picsum.photos/id/2/800/1200", "https://picsum.photos/id/3/800/1200"] },
+                        { num: 2, pages: ["https://picsum.photos/id/4/800/1200", "https://picsum.photos/id/5/800/1200"] }
+                    ]
+                },
+                {
+                    id: "m2",
+                    title: "Stardust Memories",
+                    author: "Yuki Aoi",
+                    description: "A romantic fantasy about a girl who can see stars during the day.",
+                    genre: "Romance",
+                    coverType: "✨",
+                    isOriginal: true,
+                    chapters: [
+                        { num: 1, pages: ["https://picsum.photos/id/10/800/1200", "https://picsum.photos/id/20/800/1200"] }
+                    ]
+                }
+            ];
+            saveData();
+        }
+        renderMangaGrid();
+        updateCreatorSelects();
+        updateAdminSelects();
+    }
+
+    function saveData() {
+        localStorage.setItem('mangaHubData', JSON.stringify(mangaLibrary));
+    }
+
+    // Generate unique ID
+    function generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    // ============ UI RENDERING ============
+    function renderMangaGrid() {
+        const grid = document.getElementById('mangaGrid');
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        
+        let filtered = mangaLibrary.filter(m => m.title.toLowerCase().includes(searchTerm));
+        
+        if (filtered.length === 0) {
+            grid.innerHTML = '<div class="empty-state">📭 No manga found. Add some in Creator Hub or Admin!</div>';
+            return;
+        }
+
+        grid.innerHTML = filtered.map(manga => `
+            <div class="manga-card" onclick="openManga('${manga.id}')">
+                <div class="manga-cover">${manga.coverType || '📖'}</div>
+                <div class="manga-info">
+                    <div class="manga-title">${escapeHtml(manga.title)}</div>
+                    <div class="manga-author">${escapeHtml(manga.author)}</div>
+                    <div style="font-size: 10px; color:#e94560; margin-top:4px;">${manga.chapters.length} chaps</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function openManga(mangaId) {
+        currentManga = mangaLibrary.find(m => m.id === mangaId);
+        if (!currentManga) return;
+        
+        // Show chapter list instead of grid
+        document.getElementById('browseSection').classList.remove('active');
+        document.getElementById('readingSection').classList.add('active');
+        document.getElementById('searchContainer').style.display = 'none';
+        
+        document.getElementById('readingTitle').innerHTML = `${escapeHtml(currentManga.title)} <span style="font-size:14px; color:#888;">by ${escapeHtml(currentManga.author)}</span>`;
+        
+        // Render chapter list
+        const container = document.getElementById('pagesContainer');
+        if (currentManga.chapters.length === 0) {
+            container.innerHTML = '<div class="empty-state">No chapters yet. Check back later!</div>';
+            return;
+        }
+        
+        container.innerHTML = `
+            <div class="chapter-list">
+                <h3 style="margin-bottom: 16px;">📑 Chapters</h3>
+                ${currentManga.chapters.sort((a,b) => a.num - b.num).map(ch => `
+                    <div class="chapter-item" onclick="openChapter(${ch.num})">
+                        <span>Chapter ${ch.num}</span>
+                        <span>${ch.pages.length} pages →</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        document.getElementById('prevChapterBtn').style.display = 'none';
+        document.getElementById('nextChapterBtn').style.display = 'none';
+        document.getElementById('page-controls').style.display = 'none';
+    }
+
+    function openChapter(chapterNum) {
+        currentChapter = currentManga.chapters.find(ch => ch.num === chapterNum);
+        if (!currentChapter) return;
+        currentPageIndex = 0;
+        renderChapter();
+    }
+
+    function renderChapter() {
+        const container = document.getElementById('pagesContainer');
+        const pages = currentChapter.pages;
+        
+        container.innerHTML = `
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h3>${escapeHtml(currentManga.title)} - Chapter ${currentChapter.num}</h3>
+                <div style="color:#888;">Page ${currentPageIndex + 1} of ${pages.length}</div>
+            </div>
+            <img class="manga-image" src="${pages[currentPageIndex]}" alt="Page ${currentPageIndex + 1}" style="width:100%; border-radius:12px;">
+        `;
+        
+        document.getElementById('prevChapterBtn').style.display = 'flex';
+        document.getElementById('nextChapterBtn').style.display = 'flex';
+        
+        // Update button states
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        
+        prevPageBtn.disabled = currentPageIndex === 0;
+        nextPageBtn.disabled = currentPageIndex === pages.length - 1;
+        
+        // Chapter navigation
+        const allChapters = [...currentManga.chapters].sort((a,b) => a.num - b.num);
+        const currentIndex = allChapters.findIndex(ch => ch.num === currentChapter.num);
+        
+        document.getElementById('prevChapterBtn').disabled = currentIndex === 0;
+        document.getElementById('prevChapterBtn').onclick = () => {
+            if (currentIndex > 0) {
+                currentChapter = allChapters[currentIndex - 1];
+                currentPageIndex = 0;
+                renderChapter();
+            }
+        };
+        
+        document.getElementById('nextChapterBtn').disabled = currentIndex === allChapters.length - 1;
+        document.getElementById('nextChapterBtn').onclick = () => {
+            if (currentIndex < allChapters.length - 1) {
+                currentChapter = allChapters[currentIndex + 1];
+                currentPageIndex = 0;
+                renderChapter();
+            }
+        };
+    }
+
+    // Page navigation
+    document.getElementById('prevPageBtn').onclick = () => {
+        if (currentPageIndex > 0) {
+            currentPageIndex--;
+            renderChapter();
+        }
+    };
+    
+    document.getElementById('nextPageBtn').onclick = () => {
+        if (currentPageIndex < currentChapter.pages.length - 1) {
+            currentPageIndex++;
+            renderChapter();
+        }
+    };
+
+    document.getElementById('backToBrowse').onclick = () => {
+        document.getElementById('browseSection').classList.add('active');
+        document.getElementById('readingSection').classList.remove('active');
+        document.getElementById('searchContainer').style.display = 'block';
+        renderMangaGrid();
+    };
+
+    // ============ CREATOR HUB (Original Manga) ============
+    document.getElementById('createMangaBtn').onclick = () => {
+        const title = document.getElementById('newMangaTitle').value.trim();
+        const author = document.getElementById('newMangaAuthor').value.trim();
+        const desc = document.getElementById('newMangaDesc').value.trim();
+        const genre = document.getElementById('newMangaGenre').value.trim();
+        
+        if (!title || !author) {
+            alert("Please enter at least a title and author!");
+            return;
+        }
+        
+        const newManga = {
+            id: generateId(),
+            title: title,
+            author: author,
+            description: desc || "No description",
+            genre: genre || "Uncategorized",
+            coverType: "✨",
+            isOriginal: true,
+            chapters: []
+        };
+        
+        mangaLibrary.push(newManga);
+        saveData();
+        
+        // Clear inputs
+        document.getElementById('newMangaTitle').value = '';
+        document.getElementById('newMangaAuthor').value = '';
+        document.getElementById('newMangaDesc').value = '';
+        document.getElementById('newMangaGenre').value = '';
+        
+        updateCreatorSelects();
+        renderMangaGrid();
+        alert(`"${title}" created! Now add chapters.`);
+    };
+    
+    document.getElementById('addChapterBtn').onclick = () => {
+        const mangaId = document.getElementById('chapterMangaSelect').value;
+        const chapterNum = parseInt(document.getElementById('chapterNumber').value);
+        const pagesText = document.getElementById('chapterPages').value;
+        
+        if (!mangaId || !chapterNum || !pagesText) {
+            alert("Please fill all fields!");
+            return;
+        }
+        
+        const pages = pagesText.split('\n').filter(line => line.trim().length > 0);
+        if (pages.length === 0) {
+            alert("Please add at least one image URL!");
+            return;
+        }
+        
+        const manga = mangaLibrary.find(m => m.id === mangaId);
+        if (manga.chapters.some(ch => ch.num === chapterNum)) {
+            alert("Chapter already exists! Use a different number.");
+            return;
+        }
+        
+        manga.chapters.push({ num: chapterNum, pages: pages });
+        manga.chapters.sort((a,b) => a.num - b.num);
+        saveData();
+        
+        document.getElementById('chapterNumber').value = '';
+        document.getElementById('chapterPages').value = '';
+        
+        updateCreatorSelects();
+        renderMangaGrid();
+        alert(`Chapter ${chapterNum} added to "${manga.title}"!`);
+    };
+    
+    function updateCreatorSelects() {
+        const select = document.getElementById('chapterMangaSelect');
+        const originalManga = mangaLibrary.filter(m => m.isOriginal === true);
+        select.innerHTML = '<option value="">Select your manga</option>' + 
+            originalManga.map(m => `<option value="${m.id}">${escapeHtml(m.title)}</option>`).join('');
+        
+        // Show creator's manga list
+        const container = document.getElementById('creatorMangaList');
+        if (originalManga.length === 0) {
+            container.innerHTML = '<div class="empty-state">You haven\'t created any manga yet. Create one above!</div>';
+        } else {
+            container.innerHTML = originalManga.map(m => `
+                <div style="background:#1a1a2a; padding:12px; border-radius:12px; margin-bottom:12px;">
+                    <strong>${escapeHtml(m.title)}</strong> by ${escapeHtml(m.author)}<br>
+                    <small>📖 ${m.chapters.length} chapters</small>
+                </div>
+            `).join('');
+        }
+    }
+    
+    // ============ ADMIN SECTION (Existing/Popular Manga) ============
+    document.getElementById('adminLoginBtn').onclick = () => {
+        const pwd = document.getElementById('adminPassword').value;
+        if (pwd === ADMIN_PASSWORD) {
+            isAdminLoggedIn = true;
+            document.getElementById('adminAuth').classList.add('hidden');
+            document.getElementById('adminContent').classList.remove('hidden');
+            updateAdminSelects();
+        } else {
+            alert("Wrong password!");
+        }
+    };
+    
+    document.getElementById('adminAddMangaBtn').onclick = () => {
+        if (!isAdminLoggedIn) return;
+        
+        const title = document.getElementById('adminMangaTitle').value.trim();
+        const author = document.getElementById('adminMangaAuthor').value.trim();
+        const desc = document.getElementById('adminMangaDesc').value.trim();
+        const genre = document.getElementById('adminMangaGenre').value.trim();
+        const cover = document.getElementById('adminMangaCover').value.trim();
+        
+        if (!title || !author) {
+            alert("Title and author required!");
+            return;
+        }
+        
+        const newManga = {
+            id: generateId(),
+            title: title,
+            author: author,
+            description: desc || "No description",
+            genre: genre || "Uncategorized",
+            coverType: cover || "📚",
+            isOriginal: false,
+            chapters: []
+        };
+        
+        mangaLibrary.push(newManga);
+        saveData();
+        
+        document.getElementById('adminMangaTitle').value = '';
+        document.getElementById('adminMangaAuthor').value = '';
+        document.getElementById('adminMangaDesc').value = '';
+        document.getElementById('adminMangaGenre').value = '';
+        document.getElementById('adminMangaCover').value = '';
+        
+        updateAdminSelects();
+        renderMangaGrid();
+        alert(`"${title}" added!`);
+    };
+    
+    document.getElementById('adminAddChapterBtn').onclick = () => {
+        if (!isAdminLoggedIn) return;
+        
+        const mangaId = document.getElementById('adminMangaSelect').value;
+        const chapterNum = parseInt(document.getElementById('adminChapterNum').value);
+        const pagesText = document.getElementById('adminChapterPages').value;
+        
+        if (!mangaId || !chapterNum || !pagesText) {
+            alert("Fill all fields!");
+            return;
+        }
+        
+        const pages = pagesText.split('\n').filter(line => line.trim().length > 0);
+        const manga = mangaLibrary.find(m => m.id === mangaId);
+        
+        if (manga.chapters.some(ch => ch.num === chapterNum)) {
+            alert("Chapter already exists!");
+            return;
+        }
+        
+        manga.chapters.push({ num: chapterNum, pages: pages });
+        manga.chapters.sort((a,b) => a.num - b.num);
+        saveData();
+        
+        document.getElementById('adminChapterNum').value = '';
+        document.getElementById('adminChapterPages').value = '';
+        
+        updateAdminSelects();
+        renderMangaGrid();
+        alert(`Chapter ${chapterNum} added to "${manga.title}"!`);
+    };
+    
+    function updateAdminSelects() {
+        const select = document.getElementById('adminMangaSelect');
+        select.innerHTML = '<option value="">Select manga</option>' + 
+            mangaLibrary.map(m => `<option value="${m.id}">${escapeHtml(m.title)} (${m.isOriginal ? 'Original' : 'Popular'})</option>`).join('');
+    }
+    
+    // ============ NAVIGATION ============
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const section = btn.dataset.section;
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            
+            if (section === 'browse') {
+                document.getElementById('browseSection').classList.add('active');
+                document.getElementById('searchContainer').style.display = 'block';
+                renderMangaGrid();
+            } else if (section === 'upload') {
+                document.getElementById('uploadSection').classList.add('active');
+                document.getElementById('searchContainer').style.display = 'none';
+                updateCreatorSelects();
+            } else if (section === 'admin') {
+                document.getElementById('adminSection').classList.add('active');
+                document.getElementById('searchContainer').style.display = 'none';
+                if (!isAdminLoggedIn) {
+                    document.getElementById('adminAuth').classList.remove('hidden');
+                    document.getElementById('adminContent').classList.add('hidden');
+                }
+            }
+        };
+    });
+    
+    document.getElementById('searchInput').addEventListener('input', () => {
+        if (currentView === 'browse') renderMangaGrid();
+    });
+    
+    // Make functions global for onclick
+    window.openManga = openManga;
+    window.openChapter = openChapter;
+    
+    // Initialize
+    loadData();
+</script>
+</body>
+</html>
